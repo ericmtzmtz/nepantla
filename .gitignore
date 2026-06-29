@@ -1,0 +1,33 @@
+node_modules/
+dist/
+server/data/
+*.db
+*.db-wal
+*.db-shm
+*.bak
+.env
+.env.local
+.DS_Store
+
+# Personal deployment scripts (contain keys/credentials — kept local)
+deploy-pi.sh
+update-hermes.sh
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.pytest_cache/
+*.pem
+.ruff_cache/
+.mypy_cache/
+
+# AI
+.codegraph/
+.opencode/
+openspec/
+AGENTS.md
+opencode.jsonc
+
+# Docs
+docs/

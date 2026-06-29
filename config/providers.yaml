@@ -1,0 +1,13 @@
+# Local provider overrides — applied after catalog.json sync
+# These override specific fields that models.dev catalog doesn't capture.
+overrides:
+  ollama:
+    timeout_ms: 120000
+  openrouter:
+    extra_headers:
+      HTTP-Referer: "http://localhost:3001"
+      X-Title: "nepantla"
+  pollinations:
+    base_url: "https://text.pollinations.ai/openai/v1"
+  cloudflare:
+    is_native: true

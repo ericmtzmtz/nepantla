@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "nepantla"
+version = "2.0.0"
+description = "Multi-provider LLM API proxy with routing, analytics, and auto-provisioning"
+license = "AGPL-3.0-or-later"
+authors = []
+readme = "README.md"
+packages = [{ include = "server" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.138.1"
+uvicorn = { version = "^0.49.0", extras = ["standard"] }
+pydantic = "^2.13.4"
+pydantic-settings = "^2.14.2"
+sqlalchemy = "^2.0.51"
+asyncpg = "^0.31.0"
+alembic = "^1.18.5"
+httpx = "^0.28.1"
+cryptography = "^49.0.0"
+apscheduler = "^3.11.2"
+httpx2 = "^2.5.0"
+pyyaml = "^6.0.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.1.1"
+pytest-asyncio = "^1.4.0"
+ruff = "^0.15.20"
+mypy = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["server/tests"]
