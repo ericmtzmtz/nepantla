@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, create_engine, func
+from sqlalchemy import DateTime, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -29,13 +29,6 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
 )
-
-sync_engine = create_engine(
-    settings.DATABASE_URL_SYNC,
-    echo=settings.SQL_ECHO,
-    pool_pre_ping=True,
-)
-
 
 async def get_db():
     async with AsyncSessionLocal() as session:
