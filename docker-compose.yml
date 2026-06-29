@@ -16,7 +16,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: nepantla
-      POSTGRES_PASSWORD: ${DB_PASS:-nepantla2026!*}
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: nepantla
     ports:
       - "5432:5432"

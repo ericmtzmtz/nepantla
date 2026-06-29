@@ -12,9 +12,9 @@ class Settings(BaseSettings):
 
     # Database - read from individual .env vars, build URL dynamically
     DB_URL: str = "localhost"
-    DB_USER=nepantla
-DB_PASS=nepantla2026!*
-DB=nepantla
+    DB_USER: str = "postgres"
+    DB_PASS: str = "postgres"
+    DB: str = "nepantla"
     SQL_ECHO: bool = False
 
     @property
