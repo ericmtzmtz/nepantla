@@ -149,8 +149,20 @@ async def chat_completion(
                 if stream:
                     from fastapi.responses import StreamingResponse
                     async def stream_gen():
-                        async for chunk in provider.stream_chat_completion(decrypted_key, messages, route["model_id"], options):
-                            yield f"data: {chunk.model_dump_json()}\n\n"
+                        try:
+                            async for chunk in provider.stream_chat_completion(decrypted_key, messages, route["model_id"], options):
+                                yield f"data: {chunk.model_dump_json()}\n\n"
+                        except Exception as e:
+                            error_msg = str(e)
+                            # ponytail: cooldown in stream — prevents retry on next request
+                            await RouterService.set_cooldown(db, route["platform"], route["model_id"], route["api_key"].id, penalty=1)
+                            await AnalyticsService.record_request(
+                                db, "chat", route["platform"], route["model_id"], route["api_key"].id,
+                                "error", error=error_msg,
+                            )
+                            await db.commit()
+                            # Yield valid OpenAI-format final chunk so client doesn't choke
+                            yield 'data: {"choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]}\n\n'
                         yield "data: [DONE]\n\n"
                     return StreamingResponse(stream_gen(), media_type="text/event-stream")
                 else:

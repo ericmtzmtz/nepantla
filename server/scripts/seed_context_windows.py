@@ -33,16 +33,16 @@ CONTEXT_WINDOWS = [
     ("anthropic",   "claude-2",             100000),
     ("openrouter",  "anthropic/claude-3.5-sonnet", 200000),
 
-    # Groq
-    ("groq",        "llama-3.3-70b-versatile", 131072),
-    ("groq",        "llama-3.1-8b-instant",    131072),
-    ("groq",        "mixtral-8x7b-32768",      32768),
-    ("groq",        "gemma2-9b-it",            8192),
-    ("groq",        "deepseek-r1-distill-llama-70b", 131072),
+    # Groq (free tier context limits – approximate)
+    ("groq",        "llama-3.3-70b-versatile",       8192),
+    ("groq",        "llama-3.1-8b-instant",          8192),
+    ("groq",        "mixtral-8x7b-32768",            32768),
+    ("groq",        "gemma2-9b-it",                  8192),
+    ("groq",        "deepseek-r1-distill-llama-70b",  8192),
 
-    # Cerebras
-    ("cerebras",    "llama-3.3-70b",         131072),
-    ("cerebras",    "llama-3.1-8b",          8192),
+    # Cerebras (free tier context limits – approximate)
+    ("cerebras",    "llama-3.3-70b",                 8192),
+    ("cerebras",    "llama-3.1-8b",                  8192),
 
     # Google
     ("google",      "gemini-2.0-flash",      1048576),
@@ -86,7 +86,6 @@ async def main():
                 update(ProviderCatalog)
                 .where(ProviderCatalog.platform == platform)
                 .where(ProviderCatalog.model_id == model_id)
-                .where(ProviderCatalog.context_window.is_(None))
                 .values(context_window=ctx)
             )
             result = await session.execute(stmt)
