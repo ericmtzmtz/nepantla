@@ -18,7 +18,8 @@ class RouterService:
 
     @staticmethod
     async def select_fallback(
-        db: AsyncSession, pool: str, messages_hash: str = ""
+        db: AsyncSession, pool: str, messages_hash: str = "",
+        estimated_tokens: int | None = None,
     ) -> dict | None:
         """Select best model for a given pool using fallback chain."""
         # Check sticky session first — return full route info, not just model_id
@@ -31,6 +32,13 @@ class RouterService:
                 )
                 model = model_row.scalar_one_or_none()
                 if model and (provider := ProviderRegistry.get(model.platform)):
+                    # Context window check — skip sticky if payload too big
+                    if estimated_tokens is not None and model.context_window is not None:
+                        if model.context_window < estimated_tokens:
+                            RouterService._sticky_sessions.pop(sticky_key, None)
+                            # Fall through to fallback chain
+                        else:
+                            pass  # context fits, continue to key check
                     key_result = await db.execute(
                         select(ApiKey)
                         .where(ApiKey.platform == model.platform)
@@ -49,7 +57,7 @@ class RouterService:
         # Get fallback chain ordered by priority
         # For CHAT_TOOLS pool, only include models that support tools
         if pool == "chat_tools":
-            result = await db.execute(
+            query = (
                 select(FallbackConfig, ProviderCatalog)
                 .join(ProviderCatalog, FallbackConfig.model_db_id == ProviderCatalog.id)
                 .where(FallbackConfig.pool == pool)
@@ -59,7 +67,7 @@ class RouterService:
                 .order_by(FallbackConfig.priority)
             )
         else:
-            result = await db.execute(
+            query = (
                 select(FallbackConfig, ProviderCatalog)
                 .join(ProviderCatalog, FallbackConfig.model_db_id == ProviderCatalog.id)
                 .where(FallbackConfig.pool == pool)
@@ -67,6 +75,15 @@ class RouterService:
                 .where(ProviderCatalog.enabled)
                 .order_by(FallbackConfig.priority)
             )
+
+        # ponytail: filter by context_window when estimated_tokens provided
+        if estimated_tokens is not None:
+            query = query.where(
+                ProviderCatalog.context_window.is_(None)
+                | (ProviderCatalog.context_window >= estimated_tokens)
+            )
+
+        result = await db.execute(query)
         rows = result.all()
 
         for fb, model in rows:

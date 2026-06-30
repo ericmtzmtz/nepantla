@@ -16,6 +16,21 @@ from server.modules.providers.schemas import (
 from server.modules.router.schemas import PoolType
 from server.modules.router.services import RouterService
 
+# ponytail: token estimation from ARCHITECTURE.md §10; text len//4, image ~258 avg
+def _estimate_input_tokens(messages: list[ChatMessage]) -> int:
+    """Estimate input tokens for context-aware routing."""
+    total = 0
+    for msg in messages:
+        if isinstance(msg.content, str):
+            total += len(msg.content) // 4
+        elif isinstance(msg.content, list):
+            for block in msg.content:
+                if block.get("type") == "text":
+                    total += len(block["text"]) // 4
+                elif block.get("type") == "image_url":
+                    total += 258
+    return total
+
 router = APIRouter()
 
 
@@ -113,12 +128,18 @@ async def chat_completion(
         last_error = "No available provider"
         while True:
             messages_hash = str(hash(str(messages))) if messages else ""
-            route = await RouterService.select_fallback(db, pool, messages_hash)
+            estimated_tokens = _estimate_input_tokens(messages)
+            route = await RouterService.select_fallback(db, pool, messages_hash, estimated_tokens)
             if not route:
-                await AnalyticsService.record_request(
-                    db, "chat", "unknown", pool, None, "error", 0, 0, error="no_candidate",
+                error_detail = (
+                    f"input exceeds max available context ({estimated_tokens} tokens)"
+                    if estimated_tokens
+                    else last_error
                 )
-                raise HTTPException(status_code=429, detail=last_error)
+                await AnalyticsService.record_request(
+                    db, "chat", "unknown", pool, None, "error", 0, 0, error=error_detail,
+                )
+                raise HTTPException(status_code=429, detail=error_detail)
 
             provider = route["provider"]
             api_key_obj = route["api_key"]
