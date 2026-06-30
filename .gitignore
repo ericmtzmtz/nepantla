@@ -21,6 +21,7 @@ venv/
 *.pem
 .ruff_cache/
 .mypy_cache/
+API_test.py
 
 # AI
 .codegraph/
