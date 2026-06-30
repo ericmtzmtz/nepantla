@@ -38,7 +38,7 @@ async def chat_completion(
     pool = PoolType.CHAT
     if tools:
         pool = PoolType.CHAT_TOOLS
-    elif model == "auto" or not model:
+    elif model in ("auto", "nepantla-model") or not model:
         for msg in messages:
             if isinstance(msg.content, list):
                 for block in msg.content:
@@ -58,7 +58,7 @@ async def chat_completion(
     )
 
     # If model specified directly (not auto), find provider
-    if model != "auto":
+    if model not in ("auto", "nepantla-model"):
         from sqlalchemy import select
 
         from server.modules.providers.models import ProviderCatalog
@@ -174,7 +174,7 @@ async def image_generation(
     # Build options
     from server.modules.providers.schemas import ImageGenOptions
     options = ImageGenOptions(
-        model=model if model != "auto" else None,
+        model=model if model not in ("auto", "nepantla-model") else None,
         n=body.get("n"),
         size=body.get("size"),
         quality=body.get("quality"),
@@ -183,7 +183,7 @@ async def image_generation(
     )
 
     # If model specified directly
-    if model != "auto":
+    if model not in ("auto", "nepantla-model"):
         from sqlalchemy import select
 
         from server.lib.crypto import decrypt
@@ -285,7 +285,7 @@ async def audio_transcription(
 
     opts = AudioTranscriptionOptions(language=language)
 
-    if model_id != "auto":
+    if model_id not in ("auto", "nepantla-model"):
         from sqlalchemy import select
 
         from server.lib.crypto import decrypt
@@ -377,7 +377,7 @@ async def text_to_speech(
         response_format=body.get("response_format"),
     )
 
-    if model_id != "auto":
+    if model_id not in ("auto", "nepantla-model"):
         from sqlalchemy import select
 
         from server.lib.crypto import decrypt
