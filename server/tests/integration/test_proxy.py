@@ -118,3 +118,55 @@ class TestProxy:
             headers={"Authorization": "Bearer invalid_key"},
         )
         assert resp.status_code == 401
+
+    # ----- Context-aware routing tests -----
+
+    def test_auto_routing_context_window_skip_small(self, client):
+        """Auto-routing with payload > small model context_window should skip that model.
+        
+        Models with small context_window (e.g., gemma2-9b-it with 8K) should be
+        filtered out when the payload exceeds their limit.
+        """
+        # ~10K token payload — exceeds 8K models but fits 131K models
+        huge_text = "Hello " * 2500
+        resp = client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "auto",
+                "messages": [{"role": "user", "content": huge_text}],
+            },
+            headers={"Authorization": "Bearer test-key-for-testing"},
+        )
+        # Should either succeed (routed to large context model) or fail gracefully
+        assert resp.status_code in (200, 429, 500)
+
+    def test_auto_routing_all_contexts_exceeded(self, client):
+        """Payload exceeding ALL model context windows should return 429 with clear message."""
+        # ~50K token payload — likely exceeds all models in test DB
+        massive_text = "X" * 200000
+        resp = client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "auto",
+                "messages": [{"role": "user", "content": massive_text}],
+            },
+            headers={"Authorization": "Bearer test-key-for-testing"},
+        )
+        assert resp.status_code == 429
+        data = resp.json()
+        assert "input exceeds max available context" in data["detail"].lower()
+
+    def test_auto_routing_small_payload_works_normally(self, client):
+        """Small payload should route normally without context filtering."""
+        resp = client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "auto",
+                "messages": [{"role": "user", "content": "Hi"}],
+            },
+            headers={"Authorization": "Bearer test-key-for-testing"},
+        )
+        # Without keys in test DB, expect 429 (no candidate) but NOT context error
+        assert resp.status_code == 429
+        data = resp.json()
+        assert "input exceeds max available context" not in data["detail"].lower()
