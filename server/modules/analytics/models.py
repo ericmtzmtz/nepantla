@@ -26,6 +26,7 @@ class Request(Base):
 class HourlyAgg(Base):
     __tablename__ = "hourly_agg"
 
+    id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, default=uuid.uuid4)
     hour = mapped_column(DateTime(timezone=True), primary_key=True)
     type: Mapped[str] = mapped_column(String(20), primary_key=True)
     platform: Mapped[str] = mapped_column(String(50), primary_key=True)
