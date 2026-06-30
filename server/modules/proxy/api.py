@@ -239,7 +239,7 @@ async def image_generation(
     while True:
         route = await RouterService.select_fallback(db, PoolType.IMAGE_GEN)
         if not route:
-            await AnalyticsService.record_request(db, "image_gen", "unknown", "auto", None, "error", error="no_candidate")
+            await AnalyticsService.record_request(db, "image_gen", "unknown", "nepantla-model", None, "error", error="no_candidate")
             raise HTTPException(status_code=429, detail=last_error)
 
         provider = route["provider"]
@@ -331,7 +331,7 @@ async def audio_transcription(
     while True:
         route = await RouterService.select_fallback(db, PoolType.AUDIO)
         if not route:
-            await AnalyticsService.record_request(db, "audio", "unknown", "auto", None, "error", error="no_candidate")
+            await AnalyticsService.record_request(db, "audio", "unknown", "nepantla-model", None, "error", error="no_candidate")
             raise HTTPException(status_code=429, detail=last_error)
 
         provider = route["provider"]
@@ -423,7 +423,7 @@ async def text_to_speech(
     while True:
         route = await RouterService.select_fallback(db, PoolType.AUDIO)
         if not route:
-            await AnalyticsService.record_request(db, "tts", "unknown", "auto", None, "error", error="no_candidate")
+            await AnalyticsService.record_request(db, "tts", "unknown", "nepantla-model", None, "error", error="no_candidate")
             raise HTTPException(status_code=429, detail=last_error)
 
         provider = route["provider"]
